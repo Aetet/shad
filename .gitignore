@@ -11,3 +11,10 @@
 *.lai
 *.la
 *.a
+
+*.out
+*.log
+*.aux
+*.pdf
+*.toc
+*.sage
