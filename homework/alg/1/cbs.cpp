@@ -11,7 +11,7 @@ class BracketSequence
 {
 public:
 
-    BracketSequence(const string& initStr)
+    explicit BracketSequence(const string& initStr)
       : begin(initStr.begin())
       , end(initStr.end())
     {}
@@ -70,11 +70,11 @@ int main(int argc, char *argv[])
     std::ios_base::sync_with_stdio(false);
 
     int pos;
-    string s;
+    string inputString;
 
-    getline(cin, s);
+    getline(cin, inputString);
 
-    BracketSequence cbs(s);
+    BracketSequence cbs(inputString);
 
     if (cbs.isCorrect(pos))
         cout << "CORRECT";
