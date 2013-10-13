@@ -31,7 +31,7 @@ public:
         elements.push_back(elem);
     }
 
-    int getMaximum()
+    int getMaximum() const
     {
         return elements.front();
     }
@@ -43,32 +43,36 @@ private:
 int main(int argc, char *argv[])
 {
     std::ios_base::sync_with_stdio(false);
-    //freopen("input.txt", "r", stdin);
+    // freopen("input.txt", "r", stdin);
 
-    int m, n, t, l, r;
-    char c;
+    int numberOfElements
+      , elem
+      , left
+      , right;
+    char command;
     vector<int> sequence;
     RangeMaximum rm;
 
     sequence.reserve(100000);
-    l = r = 0;
+    left = right = 0;
 
-    cin >> n;
-    for (int i = 0; i < n; ++i) {
-        cin >> t;
-        sequence.push_back(t);
+    cin >> numberOfElements;
+    for (int i = 0; i < numberOfElements; ++i) {
+        cin >> elem;
+        sequence.push_back(elem);
     }
     rm.push(sequence[0]);
 
-    cin >> m;
-    for (int i = 0; i < m; ++i) {
-        cin >> c;
-        if (c == 'R') {
-            ++r;
-            rm.push(sequence[r]);
+    int numberOfCommands;
+    cin >> numberOfCommands;
+    for (int i = 0; i < numberOfCommands; ++i) {
+        cin >> command;
+        if (command == 'R') {
+            ++right;
+            rm.push(sequence[right]);
         } else {
-            rm.pop(sequence[l]);
-            ++l;
+            rm.pop(sequence[left]);
+            ++left;
         }
         cout << rm.getMaximum() << " ";
     }
