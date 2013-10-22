@@ -1,0 +1,67 @@
+%HSE Template
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[unicode,colorlinks=true,linkcolor=blue]{hyperref}
+\usepackage{amsmath,amssymb}
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+\usepackage{graphicx}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\makeatletter
+\fancyhead[L]{\footnotesize 2013/14, <<Алгоритмы и структуры данных поиска>>}
+\fancyfoot[L]{\footnotesize \@author}
+\fancyfoot[R]{\thepage}
+\fancyfoot[C]{}
+
+\renewcommand{\maketitle}{%
+\noindent{\bfseries\scshape\large\@title\ \mdseries\upshape(\@date)}\par
+\noindent {\large\itshape\@author}
+\vskip 2ex}
+\makeatother
+
+\newenvironment{problem}[1]{\par\bigskip\noindent\textbf{Решение задачи #1.}
+  \enskip\ignorespaces}{}
+
+\title{Решение домашнего задания} % Fill the number of the homework
+\author{Тропин А. Г. \\
+  e-mail: \href{mailto:andrewtropin@gmail.com}{andrewtropin@gmail.com} \\
+  github: \href{http://github.com/abcdw/}{abcdw}}
+\date{22 октября 2013 г.} % Fill the date
+
+\begin{document}
+  \maketitle
+  \thispagestyle{fancy}
+
+  \textbf{Футболисты.}
+
+  Возьмем двух любых человек, с эффективностями $e_1$ и $e_2$ соответственно,
+  если они принадлежат идеальной команде, то и люди с эффективностями в
+  промежутке $(e_1, e_2]$ тоже принадлежат команде. Тогда логично посортить
+  футболистов по эффективности и искать самых левого и правого из футболистов,
+  принадлежащих идеальной команде.
+
+  Теперь мы можем задавать команду левым и правым футболистом, изначально
+  возьмем команду из одного человека $l = 0, r = 0$. Заметим, что пока мы
+  увеличиваем $r$ и выполняется условие $e_l + e_{l + 1} >= e_r$, то суммарная
+  эффективность только увеличивается, поэтому при увеличении $r$ мы просто
+  к суммарной эффективности прибавляем эффективность очередного футболиста.
+  Как только условие нарушается, мы начинаем увеличивать левую границу.
+  
+  Почему перебирая таким образом мы не пропустим ни одной команды, которая
+  может быть лучше чем те, что мы перебрали? Потому что любая другая команда
+  будет состоять из подмножества игроков одной из перебранных команд(мы для
+  каждого $l$ берем максимально правый $r$). \\
+
+  {\itshape{Асимптотика:}}
+
+  Сортировка работает за $O(n \log n)$. Каждая из границ меняется не больше
+  чем $n$ раз, всего две границы ($l,r$), значит всего будет не больше
+  $2n = n + n$ сдвигов границ. За каждый сдвиг границы мы пересчитываем сумму
+  и сравниваем ее с текущей максимальной за $O(1)$. И того алгоритм без
+  сортировки работает за $O(n)$, с сортировкой соответственно за $O(n \log n)$
+
+\end{document}
