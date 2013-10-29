@@ -1,0 +1,77 @@
+%HSE Template
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[unicode,colorlinks=true,linkcolor=blue]{hyperref}
+\usepackage{amsmath,amssymb}
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+\usepackage{graphicx}
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+
+\pagestyle{fancy}
+\makeatletter
+\fancyhead[L]{\footnotesize 2013/14, <<Алгоритмы и структуры данных поиска>>}
+\fancyfoot[L]{\footnotesize \@author}
+\fancyfoot[R]{\thepage}
+\fancyfoot[C]{}
+
+\renewcommand{\maketitle}{%
+\noindent{\bfseries\scshape\large\@title\ \mdseries\upshape(\@date)}\par
+\noindent {\large\itshape\@author}
+\vskip 2ex}
+\makeatother
+
+\newenvironment{problem}[1]{\par\bigskip\noindent\textbf{Решение задачи #1.}
+  \enskip\ignorespaces}{}
+
+\title{Решение домашнего задания} % Fill the number of the homework
+\author{Тропин А. Г. \\
+  e-mail: \href{mailto:andrewtropin@gmail.com}{andrewtropin@gmail.com} \\
+  github: \href{http://github.com/abcdw/}{abcdw}}
+\date{29 октября 2013 г.} % Fill the date
+
+\begin{document}
+  \maketitle
+  \thispagestyle{fancy}
+
+  \textbf{Менеджер памяти.}
+
+  Нам нужно на каждом вопросе о выделении памяти уметь быстро искать
+  самый свободный кусок памяти, поэтому заведем кучу, она как раз для этого
+  неплохо подходит. Будем хранить в куче все свободные участки памяти,
+  за логарифм мы вытаскиваем самый свободный, от него пытаемся отрезать кусок,
+  если получается, то говорим, где начинается этот участок, образеам свободный
+  участок и запихиваем обратно в кучу, если не получается, говорим -1.
+
+  С вставкой разобрались, теперь нужно реализовать удаление. У нас может быть
+  несколько различных ситуаций. 
+  \begin{itemize}
+    \item $[\_\_][XX][\_\_] \to [\_\_\_\_\_\_]$
+    \item $[**][XX][\_\_] \to [**][\_\_\_\_]$
+    \item $[\_\_][XX][**] \to [\_\_\_\_][**]$
+    \item $[**][XX][**] \to [**][\_\_][**]$
+  \end{itemize}
+
+  Будем хранить все интервалы памяти в двусвязанном списке(начало интервала,
+  количество свободной или занятой памяти и положение в куче). Теперь для
+  отмены операции выдиления памяти, нам нужно найти, этот участок памяти в
+  списке, можем делать это за константу(храним в операции итератор на элемент
+  списка), ну тогда логично хранить в куче только итераторы на элементы
+  списка и по ним обновлять положение в куче при проталкивании элемента.
+  Теперь мы можем выполнять слияния, как показано в четырех пунктах выше, 
+  с помощью операциями над списком, при этом мы будем поддерживать актуальное
+  состояние кучи. \\
+
+  {\itshape{Асимптотика:}}
+
+  При выделении элемента мы один раз обращаемся к списку $O(1)$ и два раза
+  к куче $O(\log M)$, при освобождении памяти мы максимум обращаемся к трем
+  элементам списка и делаем максимум две операции удаления $O(1)$ и максимум
+  два обращения к куче $O(\log M)$. Всего $M$ запросов и того асимптотика
+  $O(M \log M)$.
+
+
+
+\end{document}
