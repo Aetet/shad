@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <algorithm>
 
 using std::cin;
 using std::cout;
@@ -10,15 +11,10 @@ using std::list;
 using std::swap;
 using std::endl;
 
-struct TRequest
-{
-    bool rejected;
-};
-
 struct TInterval
 {
-    TInterval(int freeMem, int indx)
-        : free(freeMem), index(indx)
+    TInterval(int freeMem, int indx, int startPosition)
+        : free(freeMem), index(indx), start(startPosition)
     {}
 
     int free;
@@ -28,10 +24,18 @@ struct TInterval
     bool operator>(const TInterval& interval) const
     {
         if (this->free == interval.free) {
-            return this->start < interval.start; //pcf
+            return this->start < interval.start;
         }
         return this->free > interval.free;
     }
+};
+
+typedef list<TInterval>::iterator IntervalIterator;
+
+struct TRequest
+{
+    bool rejected;
+    IntervalIterator it;
 };
 
 class MemoryManager
@@ -39,16 +43,101 @@ class MemoryManager
 public:
     explicit MemoryManager(int memorySize)
     {
-        intervals.push_front(TInterval(memorySize, 0));
+        intervals.push_front(TInterval(memorySize, 0, 1));
         heap.push_back(intervals.begin());
+    }
+
+    void revoke(int requestId)
+    {
+        TRequest nreq;
+        nreq.rejected = true;
+
+        TRequest req = requests[requestId];
+        if (!req.rejected) {
+            req.rejected = true;
+            int sz = -(req.it->free);
+            int st = req.it->start;
+            bool inserted = false;
+
+            IntervalIterator it = intervals.erase(req.it);
+
+            if (it == intervals.end()) {
+                if (it != intervals.begin()) {
+                    --it;
+                    if (it->free > 0) {
+                        it->free += sz;
+                        update(it);
+                        inserted = true;
+                    } else {
+                        ++it;
+                    }
+                }
+            } else {
+                if (it == intervals.begin()) {
+                    if (it->free > 0) {
+                        it->free += sz;
+                        update(it);
+                        inserted = true;
+                    }
+                } else {
+                    IntervalIterator prev = it;
+                    --prev;
+                    if (it->free >= 0 && prev->free >= 0) {
+                        prev->free += it->free + sz;
+                        update(prev);
+                        remove(it);
+                        inserted = true;
+                    } else {
+                        if (prev->free >= 0) {
+                            prev->free += sz;
+                            update(prev);
+                            inserted = true;
+                        }
+
+                        if (it->free >= 0) {
+                            it->free += sz;
+                            update(it);
+                            inserted = true;
+                        }
+                    }
+                }
+            }
+
+            if (!inserted) {
+                intervals.insert(it, TInterval(sz, heap.size(), st));
+                --it;
+                insertInterval(it);
+            }
+        }
+
+        requests.push_back(nreq);
     }
 
     void addInterval(int size)
     {
-        intervals.push_front(TInterval(size, heap.size()));
-        heap.push_back(intervals.begin());
-        shiftUp(intervals.begin());
-        shiftDown(intervals.begin());
+        IntervalIterator max = popInterval();
+        TRequest req;
+        if (size > max->free) {
+            req.rejected = true;
+            insertInterval(max);
+        } else {
+            req.rejected = false;
+            intervals.insert(max, TInterval(-size, heap.size(), max->start)); // must be carefull;
+            max->free -= size;
+            max->start += size;
+            insertInterval(max);
+            max--;
+            req.it = max;
+        }
+
+        if (req.rejected) {
+            cout << -1;
+        } else {
+            cout << req.it->start;
+        }
+        cout << endl;
+
+        requests.push_back(req);
     }
 
     void printHeap()
@@ -60,13 +149,45 @@ public:
         cerr << "======== ========" << endl;
     }
 
-private:
-    typedef list<TInterval>::iterator IntervalIterator;
-
-    void insert(IntervalIterator it)
+    void doOperation(int op)
     {
-        it->index = heap.size();
+        if (op >= 0)
+            addInterval(op);
+        else
+            revoke(-op - 1);
+    }
+
+private:
+    void update(IntervalIterator it)
+    {
+        shiftUp(it);
+        shiftDown(it);
+    }
+
+    void remove(IntervalIterator it)
+    {
+        IntervalIterator ft = heap.back();
+        swp(it, ft);
+        heap.pop_back();
+        update(ft);
+    }
+
+    void insertInterval(IntervalIterator it)
+    {
         heap.push_back(it);
+        update(it);
+    }
+
+    IntervalIterator popInterval()
+    {
+        IntervalIterator ret = heap.front();
+        swp(heap.front(), heap.back());
+        IntervalIterator ft = heap.front();
+        heap.pop_back();
+        update(ft);
+
+
+        return ret;
     }
 
     IntervalIterator parent(IntervalIterator it)
@@ -102,7 +223,7 @@ private:
 
     void shiftDown(IntervalIterator it)
     {
-        while(*child(it) > *it) {
+        while (*child(it) > *it) {
             swp(it, child(it));
         }
     }
@@ -114,13 +235,14 @@ private:
 
 int main(int argc, char *argv[])
 {
-    MemoryManager mm(3);
-    mm.addInterval(10);
-    mm.addInterval(11);
-    mm.addInterval(1);
-    mm.addInterval(12);
-    mm.addInterval(1);
-    mm.addInterval(12);
-    mm.printHeap();
+    int maxMemory, operationNumber;
+    cin >> maxMemory >> operationNumber;
+    MemoryManager mm(maxMemory);
+
+    for (int i = 0; i < operationNumber; ++i) {
+        int op;
+        cin >> op;
+        mm.doOperation(op);
+    }
     return 0;
 }
