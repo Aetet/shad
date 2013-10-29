@@ -76,6 +76,7 @@ public:
                 if (it == intervals.begin()) {
                     if (it->free > 0) {
                         it->free += sz;
+                        it->start = st;
                         update(it);
                         inserted = true;
                     }
@@ -96,6 +97,7 @@ public:
 
                         if (it->free >= 0) {
                             it->free += sz;
+                            it->start = st;
                             update(it);
                             inserted = true;
                         }
@@ -125,6 +127,7 @@ public:
             intervals.insert(max, TInterval(-size, heap.size(), max->start)); // must be carefull;
             max->free -= size;
             max->start += size;
+            // may be if free != 0
             insertInterval(max);
             max--;
             req.it = max;
