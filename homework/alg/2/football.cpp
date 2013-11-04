@@ -1,6 +1,7 @@
 #include <iostream>
-#include <algorithm> 
-#include <vector> 
+#include <algorithm>
+#include <iterator>
+#include <vector>
 #include <utility>
 
 using std::cin;
@@ -8,13 +9,11 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::vector;
-using std::pair;
-using std::make_pair;
+using std::copy;
+using std::ostream_iterator;
 
-typedef pair<unsigned int, int> player;
-
-template<class T>
-void mySort(T begin, T end)
+template<class RandomAccessIterator>
+void mySort(RandomAccessIterator begin, RandomAccessIterator end)
 {
     std::make_heap(begin, end);
     while (begin != end) {
@@ -23,120 +22,144 @@ void mySort(T begin, T end)
     }
 }
 
-long long getSum(const vector<long long>& effectivitySum, int first, int last)
+struct TPlayer
 {
-    return effectivitySum[last] - (first > 0 ? effectivitySum[first - 1] : 0);
+    unsigned int effectivity;
+    unsigned int id;
+};
+
+bool operator<(const TPlayer& firstPlayer, const TPlayer& secondPlayer)
+{
+    return firstPlayer.effectivity < secondPlayer.effectivity;
 }
 
-int getMinFirstIndex(const vector<player>& players
-                   , int lastIndex)
+template <class RandomAccessIterator>
+class TSegment
 {
-    int ret = std::lower_bound(players.begin()
-                             , players.end()
-                             , make_pair(players[lastIndex].first / 2
-                                       + players[lastIndex].first % 2, 0))
-            - players.begin();
-    return ret;
+public:
+    explicit TSegment(RandomAccessIterator first
+                    , RandomAccessIterator last)
+        : first_(first)
+        , last_(last)
+        , sum_(0)
+    {}
+
+    RandomAccessIterator first()
+    {
+        return first_;
+    }
+
+    RandomAccessIterator last()
+    {
+        return last_;
+    }
+
+    RandomAccessIterator second()
+    {
+        RandomAccessIterator retit(first_);
+        ++retit;
+        return retit;
+    }
+
+    void shiftFirst()
+    {
+        ++first_;
+    }
+
+    void shiftLast()
+    {
+        ++last_;
+    }
+
+    long long& sum()
+    {
+        return sum_;
+    }
+
+private:
+    RandomAccessIterator first_, last_;
+    long long sum_;
+};
+
+class TTeamBuilder
+{
+public:
+    explicit TTeamBuilder(int playersCount)
+        : players(playersCount)
+    {}
+
+    friend std::istream& operator>>(std::istream& stream
+                                  , TTeamBuilder& builder)
+    {
+        for (int i = 0; i < builder.players.size(); ++i) {
+            stream >> builder.players[i].effectivity;
+            builder.players[i].id = i + 1;
+        }
+
+        mySort(builder.players.begin(), builder.players.end());
+        return stream;
+    }
+
+    long long getAnswer(vector<int>& perfectTeam);
+
+private:
+    vector<TPlayer> players;
+};
+
+long long TTeamBuilder::getAnswer(vector<int>& perfectTeam)
+{
+    typedef vector<TPlayer>::iterator TPIT;
+    TSegment<TPIT> current(players.begin(), players.begin())
+                                  , maximum(players.begin(), players.begin());
+
+    current.sum() += current.first()->effectivity;
+    maximum.sum() += maximum.first()->effectivity;
+
+    current.shiftLast();
+    while (current.last() != players.end()) {
+        current.sum() += current.last()->effectivity;
+
+        while (current.first()->effectivity + current.second()->effectivity
+            < current.last()->effectivity) {
+            current.sum() -= current.first()->effectivity;
+            current.shiftFirst();
+        }
+
+        if (current.sum() > maximum.sum()) {
+            maximum = current;
+        }
+        current.shiftLast();
+    }
+    maximum.shiftLast();
+
+
+    perfectTeam.erase(perfectTeam.begin(), perfectTeam.end());
+    for (TPIT it = maximum.first(); it != maximum.last(); ++it)
+        perfectTeam.push_back(it->id);
+
+    mySort(perfectTeam.begin(), perfectTeam.end());
+
+    return maximum.sum();
 }
 
-void printPlayers(const vector<player>& players, int first, int last)
+std::ostream& operator<<(std::ostream& stream
+                       , const vector<int> outVector)
 {
-    vector<int> answer;
-
-    for (int i = first; i <= last; ++i) {
-        answer.push_back(players[i].second + 1);
-    }
-
-    mySort<vector<int>::iterator>(answer.begin(), answer.end());
-    for (int i = 0; i < answer.size(); ++i) {
-        cout << answer[i] << " ";
-    }
+    copy(outVector.begin(), outVector.end(), ostream_iterator<int>(cout, " "));
+    return stream;
 }
 
 int main(int argc, char *argv[])
 {
-    int playersCount;
-    vector<player> players;
-    vector<long long> effectivitySum;
+    int playersNumber;
 
-    cin >> playersCount;
-    players.resize(playersCount);
-    effectivitySum.resize(playersCount);
+    cin >> playersNumber;
+    TTeamBuilder tb(playersNumber);
+    cin >> tb;
 
-
-    for (int i = 0; i < playersCount; ++i) {
-        cin >> players[i].first;
-        players[i].second = i;
-    }
-
-    mySort<vector<player>::iterator>(players.begin(), players.end());
-    effectivitySum[0] = players[0].first;
-    for (int i = 1; i < playersCount; ++i) {
-        if (i > 0) {
-            effectivitySum[i] = effectivitySum[i - 1] 
-                              + static_cast<long long>(players[i].first);
-        }
-    }
-
-    int maxf = 0, maxl = 0;
-    long long maxs;
-    int tfirst, tlast;
-    long long tsum;
-
-    maxs = getSum(effectivitySum, maxf, maxl);
-    
-    tfirst = 0;
-    tlast = 1;
-    tsum = players[0].first;
-    while (tlast < players.size()) {
-        tsum += players[tlast].first;
-
-        while (players[tfirst].first + players[tfirst + 1].first 
-            < players[tlast].first) {
-            tsum -= players[tfirst].first;
-            ++tfirst;
-        }
-
-        if (tsum > maxs) {
-            maxf = tfirst;
-            maxl = tlast;
-            maxs = tsum;
-        }
-
-        ++tlast;
-    }
-
-    cerr << maxf << " : " << maxl << endl;
-    cout << maxs << endl;
-    printPlayers(players, maxf, maxl);
-
-/*
- *    for (int ind = players.size() - 1; ind >= 0; --ind) {
- *        tlast = ind;
- *        tfirst = getMinFirstIndex(players, tlast);
- *
- *        tsum = getSum(effectivitySum, tfirst, tlast);
- *        if (tsum > maxs
- *         && players[tfirst].first + players[tfirst + 1].first 
- *         >= players[tlast].first) {
- *            maxf = tfirst;
- *            maxl = tlast;
- *            maxs = tsum;
- *        }
- *
- *        if (tfirst > 0)
- *            --tfirst;
- *
- *        tsum = getSum(effectivitySum, tfirst, tlast);
- *        if (tsum > maxs
- *         && players[tfirst].first + players[tfirst + 1].first
- *         >= players[tlast].first) {
- *            maxf = tfirst;
- *            maxl = tlast;
- *            maxs = tsum;
- *        }
- *    }
- */
+    vector<int> ans;
+    cout << tb.getAnswer(ans) << endl;
+    cout << ans;
 
     return 0;
 }
