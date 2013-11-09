@@ -64,7 +64,7 @@ public:
             if (it == intervals.end()) {
                 if (it != intervals.begin()) {
                     --it;
-                    if (it->free > 0) {
+                    if (it->free >= 0) {
                         it->free += sz;
                         update(it);
                         inserted = true;
@@ -74,7 +74,7 @@ public:
                 }
             } else {
                 if (it == intervals.begin()) {
-                    if (it->free > 0) {
+                    if (it->free >= 0) {
                         it->free += sz;
                         it->start = st;
                         update(it);
@@ -195,13 +195,14 @@ private:
 
     IntervalIterator parent(IntervalIterator it)
     {
-        return heap[it->index / 2];
+        return heap[(it->index - 1) / 2];
     }
 
-    IntervalIterator child(IntervalIterator it)
+    IntervalIterator child(IntervalIterator it, bool right)
     {
-        if (it->index * 2 < heap.size()) {
-            return heap[it->index * 2];
+        int ind = it->index * 2 + right + 1;
+        if (ind < heap.size()) {
+            return heap[ind];
         } else {
             return it;
         }
@@ -226,8 +227,14 @@ private:
 
     void shiftDown(IntervalIterator it)
     {
-        while (*child(it) > *it) {
-            swp(it, child(it));
+        IntervalIterator lc, rc;
+        lc = child(it, false);
+        rc = child(it, true);
+
+        if (*rc > *lc)
+            lc = rc;
+        while (*lc > *it) {
+            swp(it, lc);
         }
     }
 
