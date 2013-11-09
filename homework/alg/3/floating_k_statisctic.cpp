@@ -77,9 +77,10 @@ private:
 
 TNode invalid;
 
-template <class T, class IndexGetter
-       , class Compare
-       = std::less <typename std::iterator_traits <T>::value_type> >
+template <class T
+        , class IndexGetter
+        , class Compare
+        = std::less <typename std::iterator_traits <T>::value_type> >
 class IndexHeap
 {
 public:
