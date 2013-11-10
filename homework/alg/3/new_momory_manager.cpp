@@ -1,4 +1,6 @@
 #include <iostream>
+#include <algorithm>
+#include <functional>
 #include <vector>
 #include <list>
 #include <utility>
@@ -17,7 +19,7 @@ using std::greater;
 struct TSegment
 {
     TSegment()
-        : index(-1)
+        : index(-1), free(true)
     {}
 
     int segmentSize;
@@ -28,14 +30,14 @@ struct TSegment
     bool operator<(const TSegment& rhl) const
     {
         if (this->segmentSize == rhl.segmentSize)
-            return this->firstCell < rhl.firstCell;
+            return this->firstCell > rhl.firstCell;
         return this->segmentSize < rhl.segmentSize;
     }
 
     bool operator>(const TSegment& rhl) const
     {
         if (this->segmentSize == rhl.segmentSize)
-            return this->firstCell > rhl.firstCell;
+            return this->firstCell < rhl.firstCell;
         return this->segmentSize > rhl.segmentSize;
     }
 };
@@ -123,8 +125,10 @@ public:
 
     void swp(int ftind, int sdind)
     {
-        swap(index(heap[ftind]), index(heap[sdind]));
-        swap(heap[ftind], heap[sdind]);
+        if (ftind == sdind)
+            return;
+        swap(index(heap.at(ftind)), index(heap.at(sdind)));
+        swap(heap.at(ftind), heap.at(sdind));
     }
 
     void print()
@@ -147,9 +151,11 @@ public:
     {
         int tind, pind;
         tind = index(it);
-        pind = (tind - 1) / 2;
 
-        if (compare(*(heap[tind]), *(heap[pind]))) {
+        pind = (tind - 1) / 2;
+        // cerr << "tind|pind: " << tind << " " << pind << endl;
+
+        if (compare(*(heap.at(tind)), *(heap.at(pind)))) {
             swp(tind, pind);
             return true;
         }
@@ -167,12 +173,12 @@ public:
         largestChild = itIndex;
 
         if (leftChild < size()
-         && compare(*(heap[leftChild]), *(heap[largestChild]))) {
+         && compare(*(heap.at(leftChild)), *(heap.at(largestChild)))) {
             largestChild = leftChild;
         }
 
         if (rightChild < size()
-         && compare(*(heap[rightChild]), *(heap[largestChild]))) {
+         && compare(*(heap.at(rightChild)), *(heap.at(largestChild)))) {
             largestChild = rightChild;
         }
 
@@ -195,6 +201,7 @@ struct TRequest
     TRequest()
         : rejected(false)
     {}
+
     bool rejected;
     segmentIterator segment;
 };
@@ -221,18 +228,22 @@ public:
         request.rejected = true;
         requests.push_back(request);
 
-        if (requests[requestNumber].rejected)
+        if (requests.at(requestNumber).rejected)
             return;
-        requests[requestNumber].rejected = true;
+        requests.at(requestNumber).rejected = true;
 
-        segmentIterator segment = requests[requestNumber].segment;
+        segmentIterator segment = requests.at(requestNumber).segment;
+        if (segment == memorySegments.end())
+            return;
+
         segment->free = true;
+
         segmentIterator next = segment;
-        segmentIterator prev = segment;
         ++next;
         tryMerge(segment, next);
-        --prev;
 
+        segmentIterator prev = segment;
+        --prev;
         bool successMerge = tryMerge(prev, segment);
         if (successMerge) {
             freeMemory.insert(prev);
@@ -254,16 +265,28 @@ public:
         TRequest request;
 
         segmentIterator maxSegment = freeMemory.top();
+        // cerr << freeMemory.top()->segmentSize << " ";
         freeMemory.pop();
+        // cerr << freeMemory.top()->segmentSize << endl;
+
         int firstFreeCell = maxSegment->firstCell;
 
         if (maxSegment->segmentSize > memorySize) {
             TSegment newMemSegment;
-            newMemSegment = shrink(maxSegment, memorySize);
+            newMemSegment.segmentSize = memorySize;
+            newMemSegment.free = false;
+            newMemSegment.firstCell = maxSegment->firstCell;
+            maxSegment->firstCell += memorySize;
+            maxSegment->segmentSize -= memorySize;
+
+            // shrink(maxSegment, memorySize);
             memorySegments.insert(maxSegment, newMemSegment);
+            // can't distinguish iterator from segment by variable name
+
             freeMemory.insert(maxSegment);
             --maxSegment;
             request.segment = maxSegment;
+            // cerr << "maxSegmentSize: " << maxSegment->segmentSize << endl;
         } else {
             maxSegment->free = false;
             request.segment = maxSegment;
@@ -275,7 +298,7 @@ public:
     }
 
 private:
-    bool tryMerge(segmentIterator& ft, segmentIterator& sd)
+    bool tryMerge(segmentIterator ft, segmentIterator sd)
     {
         if (sd == memorySegments.end() || sd == memorySegments.begin())
             return false;
@@ -285,7 +308,7 @@ private:
             freeMemory.remove(sd);
             ft->segmentSize += sd->segmentSize;
             memorySegments.erase(sd);
-            freeMemory.insert(ft);
+            // freeMemory.insert(ft);
             return true;
         }
 
@@ -320,7 +343,8 @@ int main(int argc, char *argv[])
     for (int i = 0; i < requestNumber; ++i) {
         int request;
         cin >> request;
-        if (request > 0) {
+        // cerr << "I [" << i + 1  << "] : " << request << endl;
+        if (request >= 0) {
             cout << mm.allocate(request) << endl;
         } else {
             mm.revoke(-request);
