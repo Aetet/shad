@@ -19,4 +19,9 @@
 *.toc
 *.sage
 
+*.fls
+*.fdb_latexmk
+*.dvi
+*.input
+
 # exclude binary files
