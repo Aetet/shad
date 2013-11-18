@@ -18,3 +18,5 @@
 *.pdf
 *.toc
 *.sage
+
+# exclude binary files
