@@ -35,9 +35,28 @@ public:
         }
     }
 
-    unsigned int hash(unsigned int number) {
-        number = ((number >> 16) ^ number);
-        number = ~number;
+/*
+ *    unsigned int hash(unsigned int number) {
+ *        number = ((number >> 16) ^ number) * 0x45d9f3b;
+ *        number = ((number >> 16) ^ number) * 0x45d9f3b;
+ *        number = ((number >> 16) ^ number);
+ *        number = ~number;
+ *        return number >> mod;
+ *    }
+ *
+ */
+    unsigned int hash(unsigned int number)
+    {
+        // number = ~number;
+        unsigned int highorder = number & 0xf8000000;    // extract high-order 5 bits from h
+        // 0xf8000000 is the hexadecimal representation
+        //   for the 32-bit number with the first five 
+        //   bits = 1 and the other bits = 0   
+        number = number << 5;                    // shift h left by 5 bits
+        number = number ^ (highorder >> 27);     // move the highorder 5 bits to the low-order
+        //   end and XOR into h
+        // unsigned int ki = 39916799;
+        // number = number ^ ki;                    // XOR h and ki
         return number >> mod;
     }
 
