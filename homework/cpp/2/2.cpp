@@ -278,11 +278,11 @@ int main(int argc, char *argv[])
     ++p[1];
     cout << (p % p2) << endl;
 
-    Polynomial<int> pp, pp2;
-    pp[0] = 1;
-    pp[1] = 2;
-    pp[2] = 3;
-    pp[3] = 4;
+    Polynomial<float> pp, pp2;
+    pp[0] = 2;
+    pp[1] = 4;
+    pp[2] = 6;
+    pp[3] = 8;
     pp2[0] = 1;
     pp2[1] = 2;
     pp2[2] = 3;
