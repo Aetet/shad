@@ -17,7 +17,7 @@ public:
     Polynomial()
     {}
 
-    Polynomial(T coefficient)
+    explicit Polynomial(T coefficient)
         : coefficients(1, coefficient)
     {}
 
@@ -27,29 +27,30 @@ public:
         : coefficients(begin, end)
     {}
 
-    T& operator[](size_t i)
+    T& operator[](size_t index)
     {
-        if (i >= coefficients.size())
-            coefficients.resize(i + 1);
+        if (index >= coefficients.size())
+            coefficients.resize(index + 1);
 
-        return coefficients[i];
+        return coefficients[index];
     }
 
-    const T& operator[](size_t i) const
+    const T& operator[](size_t index) const
     {
-        return coefficients[i];
+        return coefficients[index];
     }
 
     bool operator==(const Polynomial& polynom) const
     {
         if (polynom.degree() == this->degree()) {
-            for (int i = 0; i <= polynom.degree(); ++i)
+            for (int i = 0; i <= polynom.degree(); ++i) {
             // float comparsion problem, mb better abs(delt) > eps?
                 if (polynom.coefficients[i] != this->coefficients[i])
                     return false;
-        }
-        else
+            }
+        } else {
             return false;
+        }
 
         return true;
     }
@@ -71,8 +72,9 @@ public:
 
     const Polynomial& operator+=(const Polynomial& polynom)
     {
-        for (int i = 0; i <= polynom.degree(); ++i)
+        for (int i = 0; i <= polynom.degree(); ++i) {
             (*this)[i] += polynom[i];
+        }
 
         updateDegree();
         return *this;
@@ -101,8 +103,9 @@ public:
 
     const Polynomial& operator-=(const Polynomial& polynom)
     {
-        for (int i = 0; i <= polynom.degree(); ++i)
+        for (int i = 0; i <= polynom.degree(); ++i) {
             (*this)[i] -= polynom[i];
+        }
 
         updateDegree();
         return *this;
@@ -188,19 +191,19 @@ public:
 
     typename vector<T>::const_iterator begin() const
     {
-        return coefficients.cbegin();
+        return coefficients.begin();
     }
 
     typename vector<T>::const_iterator end() const
     {
-        return coefficients.cend();
+        return coefficients.end();
     }
 
     friend ostream& operator<<(ostream& stream, const Polynomial &polynom)
     {
         // from 0 to degree()
-        for (auto it  = polynom.begin();
-                  it != polynom.end(); ++it)
+        for (typename vector<T>::const_iterator it  = polynom.begin();
+                                                it != polynom.end(); ++it)
             cout << *it << " ";
         return stream;
     }
@@ -224,11 +227,6 @@ private:
                 // coefficients should be good
                 = module.coefficients.back() / divisor.coefficients.back();
 
-            //cerr << "cerr: " << endl;
-            //cerr << module << endl;
-            //cerr << divisor << endl;
-            //cerr << mult << endl;
-
             module -= divisor * mult;
             if (!getModule)
                 result += mult;
@@ -244,7 +242,7 @@ private:
 };
 
 template<typename T>
-Polynomial<T> operator,(Polynomial<T> a, Polynomial<T> b)
+Polynomial<T> operator, (Polynomial<T> a, Polynomial<T> b)
 {
     if (a.degree() == -1)
         return b;
@@ -253,40 +251,40 @@ Polynomial<T> operator,(Polynomial<T> a, Polynomial<T> b)
 
 int main(int argc, char *argv[])
 {
-    vector<int> coefs = {1, 53, 11};
-    //Polynomial<int> p(coefs.begin(), coefs.end());
-    //Polynomial<int> p2(7);
+    // vector<int> coefs = {1, 53, 11};
+    // Polynomial<int> p(coefs.begin(), coefs.end());
+    // Polynomial<int> p2(7);
 
-    //p += p2;
-    //p[0] = 3;
-    //cout << (p == p2) << endl;
-    //cout << p + p << endl;
-    //p *= p;
+    // p += p2;
+    // p[0] = 3;
+    // cout << (p == p2) << endl;
+    // cout << p + p << endl;
+    // p *= p;
 
     Polynomial<int> p;
-    Polynomial<int> p2;
+    Polynomial<int> pt;
 
     p[0] = 1;
     p[1] = 3;
     p[2] = 1;
-    p2[0] = 2;
-    p2[1] = 1;
+    pt[0] = 2;
+    pt[1] = 1;
 
-    p *= p2;
+    p *= pt;
     ++p[0];
     ++p[1];
     ++p[1];
-    cout << (p % p2) << endl;
+    cout << (p % pt) << endl;
 
-    Polynomial<float> pp, pp2;
+    Polynomial<float> pp, ppp;
     pp[0] = 2;
     pp[1] = 4;
     pp[2] = 6;
     pp[3] = 8;
-    pp2[0] = 1;
-    pp2[1] = 2;
-    pp2[2] = 3;
-    pp2[3] = 4;
-    cout << (pp, pp2);
+    ppp[0] = 1;
+    ppp[1] = 2;
+    ppp[2] = 3;
+    ppp[3] = 4;
+    cout << (pp, ppp);
     return 0;
 }
